@@ -24,6 +24,32 @@ services:
       DEFAULT_VECTORIZER_MODULE: 'none'
       ENABLE_MODULES: ''
       CLUSTER_HOSTNAME: 'node1'
+ 
+  ollama:
+    volumes:
+      - ollama:/root/.ollama
+    container_name: ollama
+    # pull_policy: always
+    tty: true
+    restart: unless-stopped
+    image: ollama/ollama:latest
+
+  app:
+    build: .
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - weaviate
+    environment:
+      - WEAVIATE_URL=http://weaviate:8080
+      - QUERY=Retrieve the issuer name!  # Set your query environment variable
+
+    # This command overrides the CMD in Dockerfile if needed
+    command: python app.py
+
+
+      
 volumes:
   weaviate_data:
+  ollama:
 ...
