@@ -1,16 +1,18 @@
 import weaviate
-import argparse
-import timeit
-import json
-import time
-import warnings
 from llama_index import StorageContext, SimpleDirectoryReader, ServiceContext, VectorStoreIndex
 from llama_index.vector_stores import WeaviateVectorStore
 from llama_index.embeddings import LangchainEmbedding
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
-from llama_index.llms import Ollama
 import box
 import yaml
+import warnings
+import timeit
+import argparse
+from rag.pipeline import build_rag_pipeline
+import json
+import time
+import warnings
+
 import os
 
 
