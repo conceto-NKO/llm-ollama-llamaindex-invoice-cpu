@@ -15,6 +15,20 @@ import yaml
 
 import os
 
+class InvoiceInfo(BaseModel):
+    invoice_number: int
+    invoice_date: str
+    client_name: str
+    client_address: str
+    client_tax_id: str
+    seller_name: str
+    seller_address: str
+    seller_tax_id: str
+    iban: str
+    names_of_invoice_items: List[str]
+    gross_worth_of_invoice_items: List[float]
+    total_gross_worth: str
+
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
