@@ -115,9 +115,9 @@ def main():
 
     print("Building index...")
     service_context = ServiceContext.from_defaults(
-        chunk_size=chunk_size,
+        chunk_size=cfg.CHUNK_SIZE,
         llm=llm,
-        embed_model=embed_model
+        embed_model=embeddings
     )
 
     index = VectorStoreIndex.from_vector_store(
