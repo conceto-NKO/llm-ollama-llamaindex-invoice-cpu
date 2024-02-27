@@ -73,6 +73,7 @@ def get_rag_response(query, chain, debug=False):
 
 def main():
 
+    debug = True
     # INGEST PROCESS
 
 
@@ -174,7 +175,7 @@ def main():
             answer = 'No answer found.'
             break
         print('Retrieving answer...')
-        answer = get_rag_response(args.input, rag_chain, args.debug)
+        answer = get_rag_response(query, rag_chain, debug)
 
     end = timeit.default_timer()
 
