@@ -112,7 +112,7 @@ def main():
     # Wait for user input for the query
     # query = input("Enter your query: ")
     query = os.getenv("QUERY", "Retrieve all available information!")
-
+    print(query)
 
 
     # MAIN LLM PROCESS
@@ -121,10 +121,8 @@ def main():
     llm = Ollama(model=cfg.LLM, base_url=cfg.OLLAMA_BASE_URL, temperature=0)
 
     print("Building RAG pipeline...")
+    start = timeit.default_timer()
 
-
-    print("Connecting to Weaviate")
-    client = weaviate.Client(cfg.WEAVIATE_URL)
 
     print("Loading Ollama...")
     llm = Ollama(model=cfg.LLM, base_url=cfg.OLLAMA_BASE_URL, temperature=0)
