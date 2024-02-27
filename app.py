@@ -56,6 +56,10 @@ def get_rag_response(query, chain, debug=False):
     return False
 
 def main():
+
+    # INGEST PROCESS
+
+
     # Load configuration
     with open('config.yml', 'r', encoding='utf8') as ymlfile:
         cfg = box.Box(yaml.safe_load(ymlfile))
@@ -64,13 +68,27 @@ def main():
     client = weaviate.Client(cfg.WEAVIATE_URL)
 
     print("Loading documents...")
-    documents = load_documents(cfg.DATA_PATH)
+    # documents = load_documents(cfg.DATA_PATH)
+    documents = SimpleDirectoryReader(cfg.DATA_PATH, required_exts=[".pdf"]).load_data()
+    print(f"Loaded {len(documents)} documents")
+    print(f"First document: {documents[0]}")
+
 
     print("Loading embedding model...")
-    embeddings = load_embedding_model(model_name=cfg.EMBEDDINGS)
-
+    embeddings = LangchainEmbedding(
+            HuggingFaceEmbeddings(model_name=model_name)
+        )
     print("Building index...")
-    index = build_index(client, embeddings, documents, cfg.INDEX_NAME)
+    # index = build_index(client, embeddings, documents, cfg.INDEX_NAME)
+    service_context = ServiceContext.from_defaults(embed_model=embeddings, llm=None)
+    vector_store = WeaviateVectorStore(weaviate_client=client, index_name=cfg.INDEX_NAME)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+
+    index = VectorStoreIndex.from_documents(
+        documents,
+        service_context=service_context,
+        storage_context=storage_context,
+    )
 
     print("Index built successfully.")
 
@@ -78,26 +96,75 @@ def main():
     # query = input("Enter your query: ")
     query = os.getenv("QUERY", "Retrieve all available information!")
 
+
+
+    # MAIN LLM PROCESS
+
     print("Loading Ollama...")
     llm = Ollama(model=cfg.LLM, base_url=cfg.OLLAMA_BASE_URL, temperature=0)
 
     print("Building RAG pipeline...")
-    service_context = ServiceContext.from_defaults(llm=llm, embed_model=embeddings)
-    vector_store = WeaviateVectorStore(weaviate_client=client, index_name=cfg.INDEX_NAME)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    rag_chain = VectorStoreIndex.from_vector_store(vector_store, service_context=service_context).as_query_engine(
+
+
+    print("Connecting to Weaviate")
+    client = weaviate.Client(cfg.WEAVIATE_URL)
+
+    print("Loading Ollama...")
+    llm = Ollama(model=cfg.LLM, base_url=cfg.OLLAMA_BASE_URL, temperature=0)
+
+
+    print("Building index...")
+    service_context = ServiceContext.from_defaults(
+        chunk_size=chunk_size,
+        llm=llm,
+        embed_model=embed_model
+    )
+
+    index = VectorStoreIndex.from_vector_store(
+        vector_store, service_context=service_context
+    )
+
+
+    # index = build_index(cfg.CHUNK_SIZE, llm, embeddings, client, cfg.INDEX_NAME)
+
+    print("Constructing query engine...")
+
+    rag_chain = index.as_query_engine(
         streaming=False,
-        output_cls=None,  # Adjust as per your response class
+        output_cls=InvoiceInfo,
         response_mode="compact"
     )
 
-    print("Retrieving answer...")
-    start = timeit.default_timer()
-    answer = get_rag_response(query, rag_chain)
+
+    # storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    # rag_chain = VectorStoreIndex.from_vector_store(vector_store, service_context=service_context).as_query_engine(
+    #     streaming=False,
+    #     output_cls=None,  # Adjust as per your response class
+    #     response_mode="compact"
+    # )
+
+
+
+    step = 0
+    answer = False
+    while not answer:
+        step += 1
+        if step > 1:
+            print('Refining answer...')
+            # add wait time, before refining to avoid spamming the server
+            time.sleep(5)
+        if step > 3:
+            # if we have refined 3 times, and still no answer, break
+            answer = 'No answer found.'
+            break
+        print('Retrieving answer...')
+        answer = get_rag_response(args.input, rag_chain, args.debug)
+
     end = timeit.default_timer()
 
     print(f'\nJSON answer:\n{answer}')
     print('=' * 50)
+
     print(f"Time to retrieve answer: {end - start}")
 
 if __name__ == "__main__":
