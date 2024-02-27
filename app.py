@@ -76,7 +76,7 @@ def main():
 
     print("Loading embedding model...")
     embeddings = LangchainEmbedding(
-            HuggingFaceEmbeddings(model_name=model_name)
+            HuggingFaceEmbeddings(model_name=cfg.EMBEDDINGS)
         )
     print("Building index...")
     # index = build_index(client, embeddings, documents, cfg.INDEX_NAME)
