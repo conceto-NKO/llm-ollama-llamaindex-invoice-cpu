@@ -11,6 +11,7 @@ from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from llama_index.llms import Ollama
 import box
 import yaml
+from pydantic import BaseModel
 
 
 import os
