@@ -12,6 +12,7 @@ from llama_index.llms import Ollama
 import box
 import yaml
 from pydantic import BaseModel
+from typing import List
 
 
 import os
