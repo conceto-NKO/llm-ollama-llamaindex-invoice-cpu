@@ -1,5 +1,5 @@
 ---
-version: '3.4'
+version: '3.8'
 services:
   weaviate:
     container_name: weaviate-db
@@ -33,6 +33,13 @@ services:
     tty: true
     restart: unless-stopped
     image: ollama/ollama:latest
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: ["gpu"]
+            - driver: nvidia
+              capabilities: ["gpu"]
 
   app:
     build: .
